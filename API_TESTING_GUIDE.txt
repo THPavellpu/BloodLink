@@ -1,0 +1,174 @@
+"""
+API Testing Guide - cURL Examples
+"""
+
+# ============================================================
+# 1. REGISTRATION
+# ============================================================
+
+# Register a new user
+curl -X POST http://localhost:8000/api/auth/register/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "newuser",
+    "email": "user@example.com",
+    "password": "securepass123",
+    "password2": "securepass123",
+    "name": "John Doe",
+    "phone": "1234567890",
+    "blood_group": "A+",
+    "latitude": 40.7128,
+    "longitude": -74.0060,
+    "location_name": "New York"
+  }'
+
+# ============================================================
+# 2. LOGIN & GET TOKENS
+# ============================================================
+
+# Login to get JWT tokens
+curl -X POST http://localhost:8000/api/login/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "newuser",
+    "password": "securepass123"
+  }'
+
+# Save the access token from response
+# export TOKEN="your_access_token_here"
+
+# Refresh access token
+curl -X POST http://localhost:8000/api/token/refresh/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refresh": "your_refresh_token_here"
+  }'
+
+# ============================================================
+# 3. USER PROFILE
+# ============================================================
+
+# Get current user profile
+curl -X GET http://localhost:8000/api/user/profile/ \
+  -H "Authorization: Bearer $TOKEN"
+
+# Update user profile
+curl -X PUT http://localhost:8000/api/user/update/ \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "newemail@example.com",
+    "name": "Jane Doe",
+    "blood_group": "B+",
+    "is_available": true
+  }'
+
+# Update user location
+curl -X POST http://localhost:8000/api/user/location/ \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "latitude": 40.7589,
+    "longitude": -73.9851,
+    "location_name": "Times Square, NYC"
+  }'
+
+# ============================================================
+# 4. BLOOD REQUESTS
+# ============================================================
+
+# Create a blood request
+curl -X POST http://localhost:8000/api/request/create/ \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "blood_group": "O+",
+    "latitude": 40.7480,
+    "longitude": -73.9862,
+    "location_name": "Midtown, NYC",
+    "urgency": "High",
+    "message": "Need blood urgently for emergency surgery"
+  }'
+
+# Get all active blood requests
+curl -X GET http://localhost:8000/api/request/all/ \
+  -H "Authorization: Bearer $TOKEN"
+
+# Get current user's blood requests
+curl -X GET http://localhost:8000/api/request/my_requests/ \
+  -H "Authorization: Bearer $TOKEN"
+
+# Get specific blood request
+curl -X GET http://localhost:8000/api/request/1/ \
+  -H "Authorization: Bearer $TOKEN"
+
+# Update blood request
+curl -X PUT http://localhost:8000/api/request/1/update_request/ \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "urgency": "Medium",
+    "is_fulfilled": false
+  }'
+
+# Cancel blood request
+curl -X DELETE http://localhost:8000/api/request/1/cancel/ \
+  -H "Authorization: Bearer $TOKEN"
+
+# ============================================================
+# 5. DONOR MATCHING
+# ============================================================
+
+# Find matching donors by blood group and location
+curl -X GET "http://localhost:8000/api/donors/match/?blood_group=A%2B&latitude=40.7128&longitude=-74.0060&limit=50" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Different blood groups
+# A+  -> A%2B
+# A-  -> A-
+# B+  -> B%2B
+# O+  -> O%2B
+# O-  -> O-
+# AB+ -> AB%2B
+# AB- -> AB-
+
+# ============================================================
+# 6. NOTIFICATIONS
+# ============================================================
+
+# Register FCM token
+curl -X POST http://localhost:8000/api/notifications/register_token/ \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "token": "eKD0LqI7uJA:APA91bFxxxxxxxxxxx"
+  }'
+
+# Get registered FCM token
+curl -X GET http://localhost:8000/api/notifications/my_token/ \
+  -H "Authorization: Bearer $TOKEN"
+
+# Deregister FCM token
+curl -X DELETE http://localhost:8000/api/notifications/deregister_token/ \
+  -H "Authorization: Bearer $TOKEN"
+
+# ============================================================
+# 7. AI CHAT
+# ============================================================
+
+# Chat with Gemini AI about blood donation
+curl -X POST http://localhost:8000/api/ai/chat/ \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "question": "What are the requirements to donate blood?",
+    "context": "I want to donate blood and need information about eligibility"
+  }'
+
+# ============================================================
+# ADMIN PANEL
+# ============================================================
+
+# Access Django admin at:
+# http://localhost:8000/admin/
+# Login with superuser credentials

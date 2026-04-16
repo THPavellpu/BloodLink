@@ -1,0 +1,49 @@
+"""Quick reference for all available endpoints"""
+
+AUTHENTICATION
+==============
+POST   /api/login/
+POST   /api/auth/register/
+POST   /api/token/refresh/
+
+USER PROFILE
+============
+GET    /api/user/profile/
+PUT    /api/user/update/
+PATCH  /api/user/update/
+POST   /api/user/location/
+
+BLOOD REQUESTS
+==============
+POST   /api/request/create/
+GET    /api/request/all/
+GET    /api/request/my_requests/
+GET    /api/request/{id}/
+PUT    /api/request/{id}/update_request/
+PATCH  /api/request/{id}/update_request/
+DELETE /api/request/{id}/cancel/
+
+DONOR MATCHING
+==============
+GET    /api/donors/match/?blood_group=A+&latitude=40.7128&longitude=-74.0060
+
+NOTIFICATIONS
+==============
+POST   /api/notifications/register_token/
+GET    /api/notifications/my_token/
+DELETE /api/notifications/deregister_token/
+
+AI CHAT
+=======
+POST   /api/ai/chat/
+
+ADMIN PANEL
+===========
+GET    /admin/
+POST   /admin/login/
+
+Notes:
+- All endpoints except /api/login/ and /api/auth/register/ require JWT token
+- Include header: Authorization: Bearer <access_token>
+- Pagination is enabled for list endpoints
+- Base URL: http://localhost:8000 (development) or https://yourdomain.render.com (production)
