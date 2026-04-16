@@ -1,6 +1,7 @@
 """
 Views for user authentication and profile management.
 """
+import logging
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -13,6 +14,7 @@ from .serializers import (
     UserUpdateSerializer, LocationUpdateSerializer
 )
 
+logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
@@ -42,19 +44,57 @@ class AuthViewSet(viewsets.ViewSet):
         """
         Register a new user.
         
-        POST /api/register/
+        POST /api/auth/register/
+        
+        Request body:
+        {
+            "username": "johndoe",
+            "email": "john@example.com",
+            "first_name": "John",
+            "password": "securepass123",
+            "password2": "securepass123",
+            "phone": "1234567890",
+            "blood_group": "O+",
+            "location_name": "New York, USA"
+        }
+        
+        Response (201):
+        {
+            "message": "User registered successfully",
+            "user": { ... }
+        }
         """
-        serializer = UserRegistrationSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
+        try:
+            serializer = UserRegistrationSerializer(data=request.data)
+            
+            if serializer.is_valid():
+                user = serializer.save()
+                logger.info(f"New user registered: {user.username}")
+                
+                return Response(
+                    {
+                        'message': 'User registered successfully',
+                        'user': UserSerializer(user).data
+                    },
+                    status=status.HTTP_201_CREATED
+                )
+            
+            # Log validation errors for debugging
+            logger.warning(f"Registration validation failed: {serializer.errors}")
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        except Exception as e:
+            # Catch any unexpected errors
+            logger.error(f"Unexpected error during registration: {str(e)}", exc_info=True)
             return Response(
                 {
-                    'message': 'User registered successfully',
-                    'user': UserSerializer(user).data
+                    'error': 'An unexpected error occurred during registration. Please try again.'
                 },
-                status=status.HTTP_201_CREATED
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserViewSet(viewsets.ViewSet):
