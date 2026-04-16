@@ -24,14 +24,20 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 class AuthViewSet(viewsets.ViewSet):
     """
     ViewSet for authentication operations.
+    Handles user registration and authentication.
     """
 
     def get_permissions(self):
+        """
+        Assign permissions based on action.
+        - register: Public (AllowAny)
+        - Other actions: Require authentication
+        """
         if self.action == 'register':
             return [AllowAny()]
         return [IsAuthenticated()]
 
-    @action(detail=False, methods=['post'], permission_classes=[AllowAny()])
+    @action(detail=False, methods=['post'])
     def register(self, request):
         """
         Register a new user.
