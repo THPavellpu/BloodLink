@@ -41,19 +41,42 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             )
         return data
 
-    def create(self, validated_data):
-        user = User.objects.create_user(
-            username=validated_data['username'],
-            email=validated_data['email'],
-            password=validated_data['password'],
-            first_name=validated_data.get('name', ''),
-            phone=validated_data['phone'],
-            blood_group=validated_data['blood_group'],
-            latitude=validated_data['latitude'],
-            longitude=validated_data['longitude'],
-            location_name=validated_data['location_name'],
-        )
-        return user
+    from geopy.geocoders import Nominatim
+from geopy.exc import GeocoderTimedOut, GeocoderServiceError
+
+def create(self, validated_data):
+    location_name = validated_data.get('location_name')
+
+    latitude = None
+    longitude = None
+
+    if location_name:
+        try:
+            geolocator = Nominatim(user_agent="bloodlink_app")
+
+            location = geolocator.geocode(location_name, timeout=10)
+
+            if location:
+                latitude = location.latitude
+                longitude = location.longitude
+
+        except (GeocoderTimedOut, GeocoderServiceError):
+            # Fail silently (very important for production)
+            pass
+
+    user = User.objects.create_user(
+        username=validated_data.get('username'),
+        email=validated_data.get('email'),
+        password=validated_data.get('password'),
+        first_name=validated_data.get('name', ''),
+        phone=validated_data.get('phone'),
+        blood_group=validated_data.get('blood_group'),
+        location_name=location_name,
+        latitude=latitude,
+        longitude=longitude,
+    )
+
+    return user
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -88,6 +111,6 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
 class LocationUpdateSerializer(serializers.Serializer):
     """Serializer for updating user location."""
-    latitude = serializers.FloatField(min_value=-90.0, max_value=90.0)
-    longitude = serializers.FloatField(min_value=-180.0, max_value=180.0)
+    latitude = serializers.FloatField(required=False, allow_null=True)
+    longitude = serializers.FloatField(required=False, allow_null=True)
     location_name = serializers.CharField(max_length=255)
