@@ -101,8 +101,9 @@ class UserViewSet(viewsets.ViewSet):
         """
         serializer = LocationUpdateSerializer(data=request.data)
         if serializer.is_valid():
-            request.user.latitude = serializer.validated_data['latitude']
-            request.user.longitude = serializer.validated_data['longitude']
+            # Use .get() for optional fields to avoid KeyError
+            request.user.latitude = serializer.validated_data.get('latitude')
+            request.user.longitude = serializer.validated_data.get('longitude')
             request.user.location_name = serializer.validated_data['location_name']
             request.user.save()
             return Response(
