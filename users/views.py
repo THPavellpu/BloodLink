@@ -18,59 +18,30 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
+# ------------------ LOGIN ------------------
+
 class CustomTokenObtainPairView(TokenObtainPairView):
-    """Custom JWT token obtain view."""
     serializer_class = CustomTokenObtainPairSerializer
 
 
+# ------------------ AUTH ------------------
+
 class AuthViewSet(viewsets.ViewSet):
-    """
-    ViewSet for authentication operations.
-    Handles user registration and authentication.
-    """
 
     def get_permissions(self):
-        """
-        Assign permissions based on action.
-        - register: Public (AllowAny)
-        - Other actions: Require authentication
-        """
         if self.action == 'register':
             return [AllowAny()]
         return [IsAuthenticated()]
 
     @action(detail=False, methods=['post'])
     def register(self, request):
-        """
-        Register a new user.
-        
-        POST /api/auth/register/
-        
-        Request body:
-        {
-            "username": "johndoe",
-            "email": "john@example.com",
-            "first_name": "John",
-            "password": "securepass123",
-            "password2": "securepass123",
-            "phone": "1234567890",
-            "blood_group": "O+",
-            "location_name": "New York, USA"
-        }
-        
-        Response (201):
-        {
-            "message": "User registered successfully",
-            "user": { ... }
-        }
-        """
         try:
             serializer = UserRegistrationSerializer(data=request.data)
-            
+
             if serializer.is_valid():
                 user = serializer.save()
                 logger.info(f"New user registered: {user.username}")
-                
+
                 return Response(
                     {
                         'message': 'User registered successfully',
@@ -78,51 +49,46 @@ class AuthViewSet(viewsets.ViewSet):
                     },
                     status=status.HTTP_201_CREATED
                 )
-            
-            # Log validation errors for debugging
-            logger.warning(f"Registration validation failed: {serializer.errors}")
-            return Response(
-                serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
-            )
-            
+
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         except Exception as e:
-            # Catch any unexpected errors
-            logger.error(f"Unexpected error during registration: {str(e)}", exc_info=True)
+            logger.error(f"Registration error: {str(e)}", exc_info=True)
             return Response(
-                {
-                    'error': 'An unexpected error occurred during registration. Please try again.'
-                },
+                {'error': 'Something went wrong'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
 
+# ------------------ USER PROFILE ------------------
+
 class UserViewSet(viewsets.ViewSet):
-    """
-    ViewSet for user profile management.
-    """
     permission_classes = [IsAuthenticated]
 
-    @action(detail=False, methods=['get'])
+    # ✅ GET PROFILE
+    @action(detail=False, methods=['get'], url_path='profile')
     def profile(self, request):
         """
-        Get current user profile.
-        
-        GET /api/profile/
+        GET /api/user/profile/
         """
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
 
-    @action(detail=False, methods=['put', 'patch'])
+    # ✅ UPDATE PROFILE (FIXED NAME)
+    @action(detail=False, methods=['put', 'patch'], url_path='update-profile')
     def update_profile(self, request):
         """
-        Update user profile.
-        
-        PUT /api/profile/update/
+        PUT /api/user/update-profile/
         """
-        serializer = UserUpdateSerializer(request.user, data=request.data, partial=True)
+        serializer = UserUpdateSerializer(
+            request.user,
+            data=request.data,
+            partial=True
+        )
+
         if serializer.is_valid():
             serializer.save()
+
             return Response(
                 {
                     'message': 'Profile updated successfully',
@@ -130,22 +96,24 @@ class UserViewSet(viewsets.ViewSet):
                 },
                 status=status.HTTP_200_OK
             )
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=['post'])
+    # ✅ UPDATE LOCATION
+    @action(detail=False, methods=['post'], url_path='location')
     def location(self, request):
         """
-        Update user location.
-        
         POST /api/user/location/
         """
         serializer = LocationUpdateSerializer(data=request.data)
+
         if serializer.is_valid():
-            # Use .get() for optional fields to avoid KeyError
             request.user.latitude = serializer.validated_data.get('latitude')
             request.user.longitude = serializer.validated_data.get('longitude')
-            request.user.location_name = serializer.validated_data['location_name']
+            request.user.location_name = serializer.validated_data.get('location_name')
+
             request.user.save()
+
             return Response(
                 {
                     'message': 'Location updated successfully',
@@ -153,4 +121,5 @@ class UserViewSet(viewsets.ViewSet):
                 },
                 status=status.HTTP_200_OK
             )
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
