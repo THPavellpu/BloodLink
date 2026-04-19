@@ -12,9 +12,19 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'id', 'username', 'email', 'first_name', 'phone', 'blood_group',
-            'latitude', 'longitude', 'location_name', 'is_available',
-            'last_donation_date', 'created_at', 'updated_at'
+            'id',
+            'username',
+            'email',
+            'first_name',
+            'phone',
+            'blood_group',
+            'latitude',
+            'longitude',
+            'location_name',
+            'is_available',
+            'last_donation_date',   # ✅ already correct
+            'created_at',
+            'updated_at'
         ]
 
 
@@ -26,8 +36,14 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'username', 'email', 'first_name', 'password', 'password2',
-            'phone', 'blood_group', 'location_name'
+            'username',
+            'email',
+            'first_name',
+            'password',
+            'password2',
+            'phone',
+            'blood_group',
+            'location_name'
         ]
 
     def validate(self, data):
@@ -90,11 +106,22 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 # ------------------ UPDATE PROFILE ------------------
 class UserUpdateSerializer(serializers.ModelSerializer):
+    
+    # ✅ ADD THIS LINE (CRITICAL FIX)
+    last_donation_date = serializers.DateField(required=False, allow_null=True)
+
     class Meta:
         model = User
         fields = [
-            'email', 'first_name', 'phone', 'blood_group',
-            'latitude', 'longitude', 'location_name', 'is_available'
+            'email',
+            'first_name',
+            'phone',
+            'blood_group',
+            'latitude',
+            'longitude',
+            'location_name',
+            'is_available',
+            'last_donation_date'   # ✅ ADDED HERE
         ]
 
 
