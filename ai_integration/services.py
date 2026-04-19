@@ -14,7 +14,7 @@ class GeminiAIService:
 
     def __init__(self):
         self.api_key = os.getenv("GEMINI_API_KEY")
-        self.model_name = 'gemini-pro'
+        self.model_name = 'gemini-2.5-flash'  # You can change this to the desired Gemini model
 
         if not self.api_key:
             logger.error("❌ GEMINI_API_KEY NOT FOUND")
