@@ -62,24 +62,21 @@ class AuthViewSet(viewsets.ViewSet):
 
 # ------------------ USER PROFILE ------------------
 
+# ------------------ USER PROFILE ------------------
+
 class UserViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
 
     # ✅ GET PROFILE
     @action(detail=False, methods=['get'], url_path='profile')
     def profile(self, request):
-        """
-        GET /api/user/profile/
-        """
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
 
-    # ✅ UPDATE PROFILE (FIXED NAME)
+    # ✅ UPDATE PROFILE (FINAL FIXED)
     @action(detail=False, methods=['put', 'patch'], url_path='update-profile')
     def update_profile(self, request):
-        """
-        PUT /api/user/update-profile/
-        """
+
         serializer = UserUpdateSerializer(
             request.user,
             data=request.data,
@@ -89,22 +86,17 @@ class UserViewSet(viewsets.ViewSet):
         if serializer.is_valid():
             serializer.save()
 
+            # ✅ IMPORTANT: return ONLY user data (not wrapped)
             return Response(
-                {
-                    'message': 'Profile updated successfully',
-                    'user': UserSerializer(request.user).data
-                },
+                UserSerializer(request.user).data,
                 status=status.HTTP_200_OK
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # ✅ UPDATE LOCATION
+    # ✅ LOCATION
     @action(detail=False, methods=['post'], url_path='location')
     def location(self, request):
-        """
-        POST /api/user/location/
-        """
         serializer = LocationUpdateSerializer(data=request.data)
 
         if serializer.is_valid():
@@ -115,10 +107,7 @@ class UserViewSet(viewsets.ViewSet):
             request.user.save()
 
             return Response(
-                {
-                    'message': 'Location updated successfully',
-                    'user': UserSerializer(request.user).data
-                },
+                UserSerializer(request.user).data,
                 status=status.HTTP_200_OK
             )
 
